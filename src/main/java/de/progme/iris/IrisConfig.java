@@ -27,19 +27,19 @@ import de.progme.iris.exception.IrisException;
 import de.progme.iris.exception.IrisInvalidConfigException;
 import de.progme.iris.exception.IrisLoadConfigException;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Created by Marvin Erkes on 18.06.2016.
  */
 public class IrisConfig {
+
+    private File file;
 
     /**
      * The config file line by line as a list.
@@ -59,6 +59,8 @@ public class IrisConfig {
      */
     protected IrisConfig(File file) throws IrisException {
 
+        this.file = file;
+
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader(file))) {
             String line;
             while ((line = bufferedReader.readLine()) != null) {
@@ -68,10 +70,6 @@ public class IrisConfig {
             }
         } catch (IOException e) {
             throw new IrisLoadConfigException("could not load config file '" + file.getName() + "'");
-        }
-
-        if (this.config.size() == 0) {
-            throw new IrisEmptyConfigException("config file " + file.getName() + " is empty");
         }
 
         parse();
@@ -97,6 +95,10 @@ public class IrisConfig {
             Header header = headers.get(builderHeader.getName());
             if (header == null) {
                 headers.put(builderHeader.getName(), builderHeader);
+                config.add(builderHeader.getName() + ":");
+                for(Key key : builderHeader.getKeys()) {
+                    config.add("  " + key.getName() + " " + key.getValues().stream().map(Value::asString).collect(Collectors.joining(" ")));
+                }
             } else {
                 for (Key builderKey : builderHeader.getKeys()) {
                     if (!header.hasKey(builderKey.getName())) {
@@ -157,6 +159,13 @@ public class IrisConfig {
                 }
             }
         }
+    }
+
+    public void save() throws IOException {
+
+        FileWriter configWriter = new FileWriter(this.file);
+        configWriter.write(String.join("\n", this.config));
+        configWriter.close();
     }
 
     /**

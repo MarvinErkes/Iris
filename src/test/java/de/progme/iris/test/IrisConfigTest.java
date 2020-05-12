@@ -188,12 +188,6 @@ public class IrisConfigTest {
         assertNull(irisConfig.getHeader("random"));
     }
 
-    @Test(expected = IrisEmptyConfigException.class)
-    public void testEmptyConfig() throws Exception {
-
-        Iris.from(ClassLoader.getSystemResource("example-empty.cp").toURI()).build();
-    }
-
     @Test(expected = IrisException.class)
     public void testWrongConfigFile() throws Exception {
 
